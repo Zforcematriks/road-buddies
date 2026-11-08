@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Road Buddies – PPDK Learning App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#fff8e1;--card:#fff;--ink:#263238;--mut:#607d8b;--pri:#1e88e5;--ok:#43a047;--bad:#e53935;--sun:#ffb300;--line:#ffe0b2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b2430;--card:#26323f;--ink:#f5f5f5;--mut:#b0bec5;--line:#3b4a5a}}
+:root[data-theme="dark"]{--bg:#1b2430;--card:#26323f;--ink:#f5f5f5;--mut:#b0bec5;--line:#3b4a5a}
+*{box-sizing:inherit}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Comic Sans MS","Trebuchet MS",system-ui,sans-serif;min-height:100vh}
+main{max-width:900px;margin:0 auto;padding:14px}
+h1{font-size:clamp(26px,6vw,40px);margin:6px 0;text-align:center}h2{margin:8px 0}
+.card{background:var(--card);border:3px solid var(--line);border-radius:22px;padding:16px;margin:12px 0;box-shadow:0 4px 0 var(--line)}
+.btn{font:inherit;font-size:clamp(18px,4vw,24px);font-weight:700;border:0;border-radius:18px;padding:14px 22px;background:var(--pri);color:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.25);margin:6px}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.btn.g{background:var(--ok)}.btn.o{background:var(--sun);color:#3e2723}.btn.r{background:var(--bad)}.btn.s{font-size:15px;padding:8px 14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.act{text-align:center;cursor:pointer;font-size:20px;font-weight:700}.act .big{font-size:64px}
+.av{font-size:44px;background:var(--card);border:4px solid var(--line);border-radius:50%;width:70px;height:70px;cursor:pointer}.av.on{border-color:var(--pri);transform:scale(1.15)}
+input{font:inherit;font-size:22px;padding:12px;border-radius:14px;border:3px solid var(--line);width:min(100%,320px);background:var(--card);color:var(--ink);text-align:center}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.vis{display:flex;justify-content:center;margin:8px 0}.vis svg{width:min(210px,50vw);height:auto}
+.q{font-size:clamp(22px,5vw,32px);text-align:center;font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.opt{font:inherit;font-size:clamp(18px,4.5vw,26px);font-weight:700;background:var(--card);color:var(--ink);border:4px solid var(--line);border-radius:20px;padding:16px;cursor:pointer;box-shadow:0 5px 0 var(--line)}
+.opt .e{display:block;font-size:46px}.opt.ok{background:#c8e6c9;border-color:var(--ok);color:#1b5e20}.opt.no{background:#ffcdd2;border-color:var(--bad);color:#b71c1c;animation:sh .4s}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.bar{height:16px;background:var(--line);border-radius:10px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok);transition:width .4s}
+.stars{font-size:40px;letter-spacing:4px;text-align:center}
+.badge{display:inline-block;background:var(--sun);color:#3e2723;border-radius:16px;padding:6px 12px;margin:4px;font-weight:700}
+.pop{animation:pop .6s}@keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+table{width:100%;border-collapse:collapse;font-size:16px}th,td{padding:8px;border-bottom:2px solid var(--line);text-align:center}th{background:var(--line)}
+.wrap{overflow-x:auto}.k{font-size:30px;font-weight:800;color:var(--pri)}
+.conf{position:fixed;inset:0;pointer-events:none;font-size:34px;overflow:hidden}.conf span{position:absolute;top:-40px;animation:fall 2s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+</style></head><body><main id="app"></main>
+<script>
+var DB={students:{}},mute=false,music=false,mt,cur=null,Q=null,AC;
+try{DB=JSON.parse(localStorage.getItem('ppdk'))||DB}catch(e){}
+function save(){try{localStorage.setItem('ppdk',JSON.stringify(DB))}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function shuf(a){return a.slice().sort(function(){return Math.random()-.5})}
+function tone(f,d,t,ty){if(mute)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type=ty||'sine';o.frequency.value=f;o.connect(g);g.connect(AC.destination);var s=AC.currentTime+(t||0);g.gain.setValueAtTime(.18,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.start(s);o.stop(s+d)}catch(e){}}
+function win(){[523,659,784,1047].forEach(function(f,i){tone(f,.25,i*.12)})}
+function oops(){tone(220,.3,0,'triangle');tone(180,.3,.15,'triangle')}
+function say(t){if(mute)return;try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=.85;u.pitch=1.2;speechSynthesis.speak(u)}catch(e){}}
+function nt(f,d,v,ty){if(mute||!f)return;try{var o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.value=f;o.connect(g);g.connect(AC.destination);var s=AC.currentTime;g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.start(s);o.stop(s+d)}catch(e){}}
+function toggleMusic(){music=!music;clearInterval(mt);if(music){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}var M=[523,0,659,784,880,0,784,659,698,0,880,1047,880,0,784,0,659,659,784,880,1047,0,880,784,698,784,659,587,523,0,0,0],B=[262,350,392,262],i=0;mt=setInterval(function(){var k=i++%32;nt(M[k],.22,.15,'triangle');if(k%2==0)nt(B[Math.floor(k/8)%4],.2,.12,'sine');else nt(5000,.03,.03,'square');if(k%8==0)nt(110,.15,.2,'sine')},190)}go()}
+function confetti(){var d=document.createElement('div');d.className='conf';var e=['⭐','🎉','🌟','🎈','🚦'];for(var i=0;i<24;i++){d.innerHTML+='<span style="left:'+Math.random()*100+'%;animation-delay:'+Math.random()*.8+'s">'+e[i%5]+'</span>'}document.body.appendChild(d);setTimeout(function(){d.remove()},3200)}
+/* visuals */
+function light(c){var C={red:'#e53935',yellow:'#fdd835',green:'#43a047'};return '<svg viewBox="0 0 100 220"><rect x="10" y="5" width="80" height="210" rx="22" fill="#37474f"/>'+['red','yellow','green'].map(function(k,i){return '<circle cx="50" cy="'+(45+i*65)+'" r="26" fill="'+(k==c?C[k]:'#546e7a')+'" opacity="'+(k==c?1:.35)+'"/>'}).join('')+'</svg>'}
+function man(c){return '<svg viewBox="0 0 100 160"><rect x="10" y="5" width="80" height="150" rx="18" fill="#37474f"/><text x="50" y="100" font-size="70" text-anchor="middle">'+(c=='red'?'🧍':'🚶')+'</text><circle cx="50" cy="30" r="14" fill="'+(c=='red'?'#e53935':'#43a047')+'"/></svg>'}
+function sign(k){var t='<svg viewBox="0 0 100 100">',E='</svg>',tx=function(s,y,f,c){return '<text x="50" y="'+y+'" font-size="'+f+'" text-anchor="middle" font-weight="800" fill="'+(c||'#000')+'" font-family="Arial">'+s+'</text>'};
+if(k=='stop')return t+'<polygon points="30,4 70,4 96,30 96,70 70,96 30,96 4,70 4,30" fill="#d62828" stroke="#fff" stroke-width="3"/>'+tx('STOP',62,26,'#fff')+E;
+if(k=='give')return t+'<polygon points="50,94 5,12 95,12" fill="#fff" stroke="#d62828" stroke-width="9" stroke-linejoin="round"/>'+tx('GIVE',40,13)+tx('WAY',55,13)+E;
+if(k=='noentry')return t+'<circle cx="50" cy="50" r="46" fill="#d62828"/><rect x="18" y="41" width="64" height="18" fill="#fff"/>'+E;
+if(k=='speed')return t+'<circle cx="50" cy="50" r="44" fill="#fff" stroke="#d62828" stroke-width="9"/>'+tx('50',63,38)+E;
+if(k=='school'||k=='cross'||k=='lights')return t+'<polygon points="50,6 96,90 4,90" fill="#ffd600" stroke="#d62828" stroke-width="6" stroke-linejoin="round"/><text x="50" y="76" font-size="36" text-anchor="middle">'+{school:'🏫',cross:'🚶',lights:'🚦'}[k]+'</text>'+E;
+if(k=='hospital')return t+'<rect x="6" y="6" width="88" height="88" rx="12" fill="#1565c0"/>'+tx('H',72,64,'#fff')+E;
+if(k=='park')return t+'<rect x="6" y="6" width="88" height="88" rx="12" fill="#1565c0"/>'+tx('P',72,64,'#fff')+E;
+if(k=='nopark')return t+'<circle cx="50" cy="50" r="44" fill="#1565c0" stroke="#d62828" stroke-width="8"/>'+tx('P',68,48,'#fff')+'<line x1="20" y1="80" x2="80" y2="20" stroke="#d62828" stroke-width="9"/>'+E}
+var SIGNS=[['stop','Stop sign','🛑'],['give','Give Way','⚠️'],['noentry','No Entry','⛔'],['speed','Speed Limit','🔢'],['school','School Ahead','🏫'],['cross','Pedestrian Crossing','🚸'],['lights','Traffic Lights Ahead','🚦'],['hospital','Hospital','🏥'],['park','Parking','🅿️'],['nopark','No Parking','🚫']];
+var LIGHTS=[
+{v:light('red'),q:'The light is red. What do we do?',o:['Stop','Go','Run'],e:['✋','🏃','💨']},
+{v:light('green'),q:'The light is green. What do we do?',o:['Go','Stop','Sleep'],e:['🚗','✋','😴']},
+{v:light('yellow'),q:'The light is yellow. What do we do?',o:['Get ready to stop','Speed up','Jump'],e:['🐢','🏎️','🦘']},
+{v:'',q:'Which colour means STOP?',o:['Red','Green','Blue'],e:['🔴','🟢','🔵']},
+{v:'',q:'Which colour means GO?',o:['Green','Red','Purple'],e:['🟢','🔴','🟣']},
+{v:'',q:'Which colour means SLOW DOWN and get ready?',o:['Yellow','Green','Pink'],e:['🟡','🟢','🩷']},
+{v:man('red'),q:'The red person is showing. Can we cross?',o:['No, wait','Yes, run'],e:['🧍','🏃']},
+{v:man('green'),q:'The green walking person is showing. Can we cross?',o:['Yes, look and walk','No, never'],e:['🚶','🙅']}];
+var SAFE=[
+{q:'Where is the safest place to cross the road?',o:['Zebra crossing','Behind a bus','Middle of the road'],e:['🦓','🚌','🛣️']},
+{q:'Before we cross, what do we do?',o:['Look left and right','Close our eyes','Run very fast'],e:['👀','🙈','🏃']},
+{q:'When we ride in a car, what do we wear?',o:['Seat belt','A hat only','Nothing'],e:['🔒','🎩','❌']},
+{q:'Who can help us cross near school?',o:['Teacher or traffic warden','A stranger','Nobody'],e:['👮','🥷','🤷']},
+{q:'When we cross the road, who do we hold hands with?',o:['A grown-up we trust','A toy','Nobody'],e:['🧑‍🤝‍🧑','🧸','🚫']},
+{q:'Is it safe to play on the road?',o:['No, play at the park','Yes, it is fun'],e:['🛝','🚗']},
+{q:'When a motorbike rider rides, what must they wear?',o:['Helmet','Sunglasses','Cap'],e:['⛑️','🕶️','🧢']}];
+var ACTS={lights:{n:'Traffic Lights',i:'🚦',c:'#e53935'},signs:{n:'Road Signs',i:'🛑',c:'#1e88e5'},safe:{n:'Safe Crossing',i:'🦓',c:'#43a047'}};
+function build(a){var items;
+if(a=='signs'){items=shuf(SIGNS).slice(0,5).map(function(s){var d=shuf(SIGNS.filter(function(x){return x[0]!=s[0]})).slice(0,2);var os=shuf([s].concat(d));return{v:sign(s[0]),q:'What is this sign?',o:os.map(function(x){return x[1]}),e:os.map(function(x){return x[2]}),a:s[1]}})}
+else{var src=a=='lights'?LIGHTS:SAFE;items=shuf(src).slice(0,5).map(function(x){return{v:x.v||'',q:x.q,o:x.o,e:x.e,a:x.o[0]}})}
+return items.map(function(x){var idx=shuf(x.o.map(function(_,i){return i}));return{v:x.v,q:x.q,a:x.a,o:idx.map(function(i){return{l:x.o[i],e:x.e[i]}})}})}
+function em(e){return '<div style="font-size:110px;line-height:1.1">'+e+'</div>'}
+var LESSONS=[
+{s:'Traffic Lights',t:'Red light',v:light('red'),x:'Red means STOP. We wait and do not move.'},
+{s:'Traffic Lights',t:'Yellow light',v:light('yellow'),x:'Yellow means get ready to stop. We slow down.'},
+{s:'Traffic Lights',t:'Green light',v:light('green'),x:'Green means GO. We can move when it is safe.'},
+{s:'Traffic Lights',t:'Red walking person',v:man('red'),x:'The red person means we wait on the pavement.'},
+{s:'Traffic Lights',t:'Green walking person',v:man('green'),x:'The green person means we can cross. Look left and right first!'},
+{s:'Road Signs',t:'Stop',v:sign('stop'),x:'We must stop fully and look before we go.'},
+{s:'Road Signs',t:'Give Way',v:sign('give'),x:'We slow down and let other cars go first.'},
+{s:'Road Signs',t:'No Entry',v:sign('noentry'),x:'We cannot go in this way.'},
+{s:'Road Signs',t:'Speed Limit',v:sign('speed'),x:'Cars must not go faster than the number shown.'},
+{s:'Road Signs',t:'School Ahead',v:sign('school'),x:'Children are near. Drive slowly and be careful.'},
+{s:'Road Signs',t:'Pedestrian Crossing',v:sign('cross'),x:'People walk across here. Cars must slow down.'},
+{s:'Road Signs',t:'Traffic Lights Ahead',v:sign('lights'),x:'Traffic lights are coming soon. Get ready.'},
+{s:'Road Signs',t:'Hospital',v:sign('hospital'),x:'A hospital is near. Doctors and nurses help sick people here.'},
+{s:'Road Signs',t:'Parking',v:sign('park'),x:'We can park the car here.'},
+{s:'Road Signs',t:'No Parking',v:sign('nopark'),x:'We cannot park the car here.'},
+{s:'Stay Safe',t:'Zebra crossing',v:em('🦓'),x:'The zebra crossing is the safest place to cross the road.'},
+{s:'Stay Safe',t:'Look and listen',v:em('👀👂'),x:'Stop at the edge. Look left, look right, and listen.'},
+{s:'Stay Safe',t:'Hold hands',v:em('🧑‍🤝‍🧑'),x:'Hold the hand of a grown-up we trust when we cross.'},
+{s:'Stay Safe',t:'Seat belt',v:em('🚗🔒'),x:'In a car, we always wear our seat belt.'},
+{s:'Stay Safe',t:'Helmet',v:em('🏍️⛑️'),x:'On a motorbike or bicycle, we always wear a helmet.'},
+{s:'Stay Safe',t:'Never play on the road',v:em('🛝'),x:'Play at the park, not on the road.'}];
+var LI=0;
+function learned(){var s=me();s.sec=s.sec||{};if(!s.sec[LSEC]){s.sec[LSEC]=1;s.stars+=2}save();win();confetti();go('learnhub')}
+/* data */
+function me(){return DB.students[cur]}
+function badges(s){var b=[],t=s.log.length;if(s.stars>=5)b.push('🌟 Star Starter');if(s.stars>=15)b.push('🚓 Road Hero');if(s.stars>=30)b.push('🏆 Traffic Champion');if(s.log.some(function(l){return l.s==l.t}))b.push('💯 Perfect Round');if(t>=3)b.push('🎒 Keen Learner');if(s.learned||Object.keys(s.sec||{}).length>=3)b.push('📖 Tutorial Done');return b}
+/* views */
+var V='home',AV='🐻',app=document.getElementById('app');
+function hdr(){return '<div class="top"><b>🚸 Road Buddies</b><span><button class="btn s o" onclick="mute=!mute;go()">'+(mute?'🔇 Sound off':'🔊 Sound on')+'</button><button class="btn s g" onclick="toggleMusic()">'+(music?'🎵 Music on':'🎵 Music off')+'</button></span></div>'}
+function go(v){if(v)V=v;var h=hdr();
+if(V=='home'){h+='<h1>🚦 Road Buddies 🚸</h1><p class="q">Learn the road rules with fun games!</p><div class="card" style="text-align:center"><h2>Who are you?</h2><div class="row">'+['🐻','🐼','🦊','🐯','🐸','🦄','🐙','🐶'].map(function(a){return '<button class="av '+(a==AV?'on':'')+'" onclick="AV=\''+a+'\';go()">'+a+'</button>'}).join('')+'</div><p><input id="nm" placeholder="Type your name" maxlength="16"></p><button class="btn g" onclick="login()">▶ Let’s Play!</button></div><p class="row"><button class="btn s" onclick="teacher()">👩‍🏫 Teacher</button></p>'}
+if(V=='menu'){var s=me();h+='<h1>'+s.av+' Hi, '+esc(cur)+'!</h1><div class="card"><div class="stars">⭐ '+s.stars+'</div><div style="text-align:center">'+(badges(s).map(function(b){return '<span class="badge">'+b+'</span>'}).join('')||'<span class="mut">Play to win badges!</span>')+'</div></div><div class="card act" style="border-color:#8e24aa" onclick="go(\'learnhub\')"><div class="big">📖</div>Learn the Rules First</div><h2 style="text-align:center">Pick a game</h2><div class="grid">'+Object.keys(ACTS).map(function(k){var a=ACTS[k];return '<div class="card act" style="border-color:'+a.c+'" onclick="start(\''+k+'\')"><div class="big">'+a.i+'</div>'+a.n+'</div>'}).join('')+'</div><p class="row"><button class="btn s" onclick="cur=null;go(\'home\')">⬅ Change player</button></p>'}
+if(V=='pin'){h+='<div class="card" style="text-align:center"><h2>👩‍🏫 Teacher PIN</h2><p><input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN" onkeydown="if(event.key==\'Enter\')chk()"></p><p id="pm" class="q"></p><button class="btn g" onclick="chk()">Enter</button><button class="btn" onclick="go(\'home\')">⬅ Back</button><p>Demo PIN: 1234</p></div>'}
+if(V=='learnhub'){h+='<h1>📖 Learn the Rules</h1><p class="q">Pick a lesson</p><div class="grid">'+[['Traffic Lights','🚦','Traffic Lights','#e53935'],['Road Signs','🪧','Road Signs','#1e88e5'],['Stay Safe','🦓','Road Safety Rules','#43a047']].map(function(x){var d=(me().sec||{})[x[0]];return '<div class="card act" style="border-color:'+x[3]+'" onclick="openSec(\''+x[0]+'\')"><div class="big">'+x[1]+'</div>'+x[2]+(d?' ✅':'')+'</div>'}).join('')+'</div><p class="row"><button class="btn s" onclick="go(\'menu\')">⬅ Back</button></p>'}
+if(V=='learn'){var l=LESSONS[LI];h+='<div class="bar"><i style="width:'+((LI+1)/LESSONS.length*100)+'%"></i></div><p class="row"><b>📖 Learn · '+l.s+' · '+(LI+1)+'/'+LESSONS.length+'</b></p><div class="card"><div class="vis">'+l.v+'</div><h1>'+l.t+'</h1><p class="q">'+l.x+' <button class="btn s o" onclick="say(LESSONS[LI].t+\'. \'+LESSONS[LI].x)">🔊</button></p></div><p class="row">'+(LI>0?'<button class="btn" onclick="LI--;go()">⬅ Back</button>':'')+(LI<LESSONS.length-1?'<button class="btn g" onclick="LI++;go()">Next ➡</button>':'<button class="btn g" onclick="learned()">🎉 Finished!</button>')+'<button class="btn s" onclick="go(\'learnhub\')">✖ Exit</button></p>';setTimeout(function(){say(l.t+'. '+l.x)},300)}
+if(V=='quiz'){var q=Q.items[Q.i];h+='<div class="bar"><i style="width:'+(Q.i/5*100)+'%"></i></div><p class="row"><b>'+ACTS[Q.a].i+' '+ACTS[Q.a].n+' · Question '+(Q.i+1)+'/5 · ⭐ '+Q.sc+'</b></p><div class="card"><div class="vis">'+q.v+'</div><div class="q">'+q.q+' <button class="btn s o" onclick="say(Q.items[Q.i].q)">🔊</button></div></div><div class="opts">'+q.o.map(function(o,i){return '<button class="opt" id="o'+i+'" onclick="pick('+i+')"><span class="e">'+o.e+'</span>'+o.l+'</button>'}).join('')+'</div><p class="row"><button class="btn s" onclick="go(\'menu\')">✖ Quit</button></p>';setTimeout(function(){say(q.q)},300)}
+if(V=='done'){var n=Q.sc;h+='<div class="card" style="text-align:center"><h1 class="pop">'+(n==5?'🏆 Perfect!':n>=3?'🎉 Well done!':'👍 Good try!')+'</h1><div class="stars pop">'+'⭐'.repeat(n)+'☆'.repeat(5-n)+'</div><p class="q">You got '+n+' out of 5 right!</p>'+(Q.nb.length?'<p>New badge: '+Q.nb.map(function(b){return '<span class="badge pop">'+b+'</span>'}).join('')+'</p>':'')+'<button class="btn g" onclick="start(Q.a)">🔁 Play again</button><button class="btn" onclick="go(\'menu\')">🏠 Menu</button></div>'}
+if(V=='teach'){var ss=Object.keys(DB.students),all=0,ok=0;ss.forEach(function(k){DB.students[k].log.forEach(function(l){all+=l.t;ok+=l.s})});h+='<h1>👩‍🏫 Teacher Dashboard</h1><div class="grid"><div class="card" style="text-align:center"><div class="k">'+ss.length+'</div>Students</div><div class="card" style="text-align:center"><div class="k">'+ss.reduce(function(a,k){return a+DB.students[k].log.length},0)+'</div>Activities done</div><div class="card" style="text-align:center"><div class="k">'+(all?Math.round(ok/all*100):0)+'%</div>Class accuracy</div></div><div class="card wrap"><table><tr><th>Student</th><th>⭐ Stars</th><th>Games</th><th>Accuracy</th>'+Object.keys(ACTS).map(function(k){return '<th>'+ACTS[k].i+' '+ACTS[k].n+'</th>'}).join('')+'<th>Badges</th><th>Last played</th></tr>'+(ss.map(function(k){var s=DB.students[k],t=0,c=0;s.log.forEach(function(l){t+=l.t;c+=l.s});return '<tr><td>'+s.av+' '+esc(k)+'</td><td>'+s.stars+'</td><td>'+s.log.length+'</td><td>'+(t?Math.round(c/t*100)+'%':'-')+'</td>'+Object.keys(ACTS).map(function(a){var L=s.log.filter(function(l){return l.a==a}),tt=0,cc=0;L.forEach(function(l){tt+=l.t;cc+=l.s});return '<td>'+(tt?Math.round(cc/tt*100)+'%':'-')+'</td>'}).join('')+'<td>'+badges(s).length+'</td><td>'+(s.log.length?new Date(s.log[s.log.length-1].d).toLocaleDateString():'-')+'</td></tr>'}).join('')||'<tr><td colspan="8">No students yet.</td></tr>')+'</table></div><p class="row"><button class="btn" onclick="go(\'home\')">⬅ Back</button><button class="btn r s" onclick="clearAll()">'+(CF?'⚠ Tap again to confirm delete':'🗑 Clear data')+'</button></p>'}
+app.innerHTML=h;window.scrollTo(0,0)}
+function login(){var n=document.getElementById('nm').value.trim();if(!n){say('Please type your name');return}if(!DB.students[n])DB.students[n]={av:AV,stars:0,log:[]};else DB.students[n].av=AV;cur=n;save();win();go('menu')}
+function teacher(){go('pin')}
+function chk(){if(document.getElementById('pin').value==='1234')go('teach');else{document.getElementById('pm').textContent='❌ Wrong PIN, try again';oops()}}
+var CF=0;function clearAll(){if(!CF){CF=1;go();return}DB={students:{}};save();CF=0;go()}
+var ALL=LESSONS,LSEC='';
+function openSec(s){LSEC=s;LESSONS=ALL.filter(function(x){return x.s==s});LI=0;go('learn')}
+function start(a){Q={a:a,items:build(a),i:0,sc:0,tries:0,lock:false,nb:[]};go('quiz')}
+function pick(i){if(Q.lock)return;var q=Q.items[Q.i],b=document.getElementById('o'+i);
+if(q.o[i].l==q.a){Q.lock=true;b.classList.add('ok');win();say('Great job!');if(Q.tries==0){Q.sc++;me().stars++}confetti();Q.tries=0;setTimeout(function(){Q.i++;Q.lock=false;if(Q.i>=5)finish();else go('quiz')},1800)}
+else{Q.tries++;b.classList.add('no');oops();say('Try again!')}}
+function finish(){var s=me(),before=badges(s);s.log.push({a:Q.a,s:Q.sc,t:5,d:Date.now()});Q.nb=badges(s).filter(function(b){return before.indexOf(b)<0});save();win();confetti();go('done')}
+go('home');
+</script></body></html>
